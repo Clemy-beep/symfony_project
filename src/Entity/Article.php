@@ -4,31 +4,32 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\ArticleRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
-#[ApiResource(normalizationContext: ['groups' => ['read_article']], denormalizationContext: ['groups' => ['write_article']])]
+#[ApiResource]
 class Article
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(["read_article", "write_article"])]
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(["read_article", "write_article"])]
+    #[ORM\Column(type: 'string', length: 140)]
     private $title;
-    
+
     #[ORM\Column(type: 'text')]
-    #[Groups(["read_article", "write_article"])]
     private $content;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'articles')]
-    #[ORM\JoinColumn(nullable: true)]
-    #[Groups(["read_article", "write_article"])]
-    private $author;
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'article')]
+    private $authors;
+
+    public function __construct()
+    {
+        $this->authors = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -59,14 +60,26 @@ class Article
         return $this;
     }
 
-    public function getAuthor(): ?User
+    /**
+     * @return Collection<int, User>
+     */
+    public function getAuthors(): Collection
     {
-        return $this->author;
+        return $this->authors;
     }
 
-    public function setAuthor(?User $author): self
+    public function addAuthor(User $author): self
     {
-        $this->author = $author;
+        if (!$this->authors->contains($author)) {
+            $this->authors[] = $author;
+        }
+
+        return $this;
+    }
+
+    public function removeAuthor(User $author): self
+    {
+        $this->authors->removeElement($author);
 
         return $this;
     }
