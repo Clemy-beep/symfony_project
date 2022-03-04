@@ -4,9 +4,11 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\ArticleRepository;
+use App\Traits\DataTimeTrait;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
 #[ApiResource]
@@ -23,12 +25,14 @@ class Article
     #[ORM\Column(type: 'text')]
     private $content;
 
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'article')]
-    private $authors;
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'articles')]
+    private $author;
+
+    use DataTimeTrait;
 
     public function __construct()
     {
-        $this->authors = new ArrayCollection();
+        $this->author = new User();
     }
 
     public function getId(): ?int
@@ -63,23 +67,14 @@ class Article
     /**
      * @return Collection<int, User>
      */
-    public function getAuthors(): Collection
+    public function getAuthor(): User
     {
-        return $this->authors;
+        return $this->author;
     }
 
-    public function addAuthor(User $author): self
+    public function setAuthor(User $author): self
     {
-        if (!$this->authors->contains($author)) {
-            $this->authors[] = $author;
-        }
-
-        return $this;
-    }
-
-    public function removeAuthor(User $author): self
-    {
-        $this->authors->removeElement($author);
+        $this->author = $author;
 
         return $this;
     }

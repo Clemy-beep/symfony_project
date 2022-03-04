@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Traits\DataTimeTrait;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -18,7 +19,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(["read_article", "write_article"])]
     private $id;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
@@ -33,8 +33,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255)]
     private $username;
 
-    #[ORM\ManyToMany(targetEntity: Article::class, mappedBy: 'authors')]
+    #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'author')]
     private $articles;
+
+    use DataTimeTrait;
 
     public function __construct()
     {
@@ -111,7 +113,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // $this->plainPassword = null;
     }
 
-    public function getUsername(): ?string
+    public function getUsername(): string
     {
         return $this->username;
     }
@@ -135,7 +137,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->articles->contains($article)) {
             $this->articles[] = $article;
-            $article->addAuthor($this);
+            $article->setAuthor($this);
         }
 
         return $this;
@@ -143,9 +145,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeArticle(Article $article): self
     {
-        if ($this->articles->removeElement($article)) {
-            $article->removeAuthor($this);
-        }
+        $this->articles->removeElement($article);
 
         return $this;
     }

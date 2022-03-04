@@ -6,6 +6,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use App\Entity\User;
 use App\Entity\Article;
+use DateTime;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Faker;
 
@@ -31,16 +32,8 @@ class AppFixtures extends Fixture
         $user = new User();
         $hashpwd = $this->encoder->hashPassword($user, '123');
         $user->setEmail('foo@bar.com')->setUsername('foobar')->setPassword($hashpwd);
-        $user2 = new User();
-        $hashpwd = $this->encoder->hashPassword($user2, '123');
-        $user2->setEmail('foo@gmail.com')->setUsername('foo')->setPassword($hashpwd);
+        $user->setCreatedAt(new DateTime('now'))->setUpdatedAt(new DateTime('now'));
         $manager->persist($user);
-        $manager->persist($user2);
-        for ($i = 0; $i <= 2; $i++) {
-            $article = new Article();
-            $article->setTitle('Title' . $i)->setContent($contents[$i])->addAuthor($user)->addAuthor($user2);
-            $manager->persist($article);
-        }
         $manager->flush();
     }
 }
